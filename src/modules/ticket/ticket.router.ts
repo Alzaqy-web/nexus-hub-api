@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { JwtMiddleware } from "../../middlewares/jwt.middleware";
+
 import { TicketController } from "./ticket.controller";
 import { JWT_SECRET } from "../../config/env";
-import { validateBody } from "../../middlewares/validation.middleware";
 import { CreateTicketDTO } from "./dto/create-ticket.dto";
+import { JwtMiddleware } from "../../middleware/jwt.middleware";
+import { validateBody } from "../../middleware/validation.middleware";
 
 // console.log("CreateTicketDTO at import:", CreateTicketDTO);
 export class TicketRouter {

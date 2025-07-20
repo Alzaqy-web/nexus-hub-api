@@ -1,15 +1,15 @@
-import { ApiError } from "../../utils/api.error";
-import { CloudinariService } from "../cloudinary/cloudinary.service";
+import { ApiError } from "../../utils/api-error";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTicketDTO } from "./dto/create-ticket.dto";
 
 export class TicketService {
   private prisma: PrismaService;
-  private cloudinaryService: CloudinariService;
+  private cloudinaryService: CloudinaryService;
 
   constructor() {
     this.prisma = new PrismaService();
-    this.cloudinaryService = new CloudinariService();
+    this.cloudinaryService = new CloudinaryService();
   }
   // get all ticket
   getTickets = async () => {

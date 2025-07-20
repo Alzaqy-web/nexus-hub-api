@@ -18,9 +18,9 @@ export class MailService {
   }
 
   private renderTemplate = async (templateName: string, context: object) => {
-    const tamplateDir = path.resolve(__dirname, "./templates");
+    const templateDir = path.resolve(__dirname, "./templates");
 
-    const templatePath = path.join(tamplateDir, `${templateName}.hbs`);
+    const templatePath = path.join(templateDir, `${templateName}.hbs`);
 
     const templateSource = await fs.readFile(templatePath, "utf-8");
 

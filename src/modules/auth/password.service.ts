@@ -6,7 +6,7 @@ export class PasswordService {
     return await hash(password, salt);
   };
 
-  comparePassword = async (plainPassword: string, hashPassword: string) => {
-    return await compare(plainPassword, hashPassword);
+  comparedPassword = async (plainPassword: string, hashedPassword: string) => {
+    return await compare(plainPassword, hashedPassword);
   };
 }
