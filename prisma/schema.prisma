@@ -4,9 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Sample {
@@ -16,4 +15,48 @@ model Sample {
   updateAt DateTime @updatedAt
 
   @@map("samples")
+}
+
+enum Role {
+  customer
+  EO
+}
+
+model User {
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  password         String
+  profilePic       String?
+  referralCode     String?            @unique
+  referredBy       String?
+  role             Role               @default(customer)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  points           Int                @default(0)
+  PointHistory     PointHistory[]
+  CustomerDiscount CustomerDiscount[]
+
+  @@map("users")
+}
+
+model PointHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Int
+  expiresAt DateTime
+  createdAt DateTime
+
+  @@map("points")
+}
+
+model CustomerDiscount {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  discount  Float
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
