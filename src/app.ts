@@ -1,8 +1,13 @@
-import express, { Express } from "express";
 import cors from "cors";
-import { errorMiddleware } from "./middlewares/error.middlwares";
+import express, { Express } from "express";
+import "reflect-metadata";
 import { PORT } from "./config/env";
+import { errorMiddleware } from "./middlewares/error.middlwares";
+import { AuthRouter } from "./modules/auth/auth.router";
 import { SampleRouter } from "./modules/sample/sample.router";
+import { EventRouter } from "./modules/event/event.router";
+import { TicketRouter } from "./modules/ticket/ticket.router";
+import { TransactionRouter } from "./modules/transaction/transaction.router";
 
 export class App {
   app: Express;
@@ -24,8 +29,16 @@ export class App {
   // 2.routes()
   private routes() {
     const sampleRouter = new SampleRouter();
+    const authRouter = new AuthRouter();
+    const eventRouter = new EventRouter();
+    const ticketRouter = new TicketRouter();
+    const transactionRouter = new TransactionRouter();
 
     this.app.use("/samples", sampleRouter.getRouter());
+    this.app.use("/auth", authRouter.getRouter());
+    this.app.use("/events", eventRouter.getRouter());
+    this.app.use("/tickets", ticketRouter.getRouter());
+    this.app.use("/transactions", transactionRouter.getRouter());
   }
 
   //

@@ -4,16 +4,109 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Sample {
-  id       Int      @id @default(autoincrement())
-  name     String
-  creatAt  DateTime @default(now())
-  updateAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("samples")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  profilePic   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  events       Event[]
+  transactions Transaction[]
+  tickets      Ticket[]
+
+  @@map("users")
+}
+
+model Ticket {
+  id             Int       @id @default(autoincrement())
+  name           String
+  type           String
+  price          Int
+  availableSeats Int
+  deletedAt      DateTime?
+  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
+  eventId        Int
+  event          Event     @relation(fields: [eventId], references: [id])
+
+  @@map("tickets")
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String        @unique
+  description String        @db.Text
+  thumbnail   String
+  content     String        @db.Text
+  category    String
+  location    String
+  startDate   DateTime
+  endDate     DateTime
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
+  tickets     Ticket[]
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Transaction Transaction[]
+
+  @@map("events")
+}
+
+model Transaction {
+  id         Int               @id @default(autoincrement())
+  userId     Int
+  eventId    Int
+  quantity   Int
+  totalPrice Int
+  status     TransactionStatus @default(PENDING)
+  expiresAt  DateTime
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  user       User              @relation(fields: [userId], references: [id])
+  events     Event             @relation(fields: [eventId], references: [id])
+  payments   Payment?
+
+  @@map("transactions")
+}
+
+enum TransactionStatus {
+  PENDING // Menunggu pembayaran
+  PAID // Sudah dibayar & valid
+  FAILED // Pembayaran gagal
+  EXPIRED // Lewat batas waktu bayar
+  CANCELED // Dibatalkan user/admin
+}
+
+model Payment {
+  id            Int         @id @default(autoincrement())
+  transactionId Int         @unique
+  method        String
+  reference     String // e.g., transaction code from payment gateway
+  paidAt        DateTime?
+  amountPaid    Int
+  proofUrl      String? //url untuk bukti tf jika menual
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  transactions  Transaction @relation(fields: [transactionId], references: [id])
+
+  @@map("payments")
 }
