@@ -15,7 +15,7 @@ export class JwtMiddleware {
         const decoded = jwt.verify(token, secretKey) as JwtPayload & {
           id: number;
         };
-        req.user = decoded; // ✅ ini sekarang valid
+        req.user = decoded;
         next();
       } catch (err) {
         return res.status(401).json({ message: "Unauthorized: Invalid token" });
