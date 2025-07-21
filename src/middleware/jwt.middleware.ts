@@ -1,25 +1,28 @@
-import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { NextFunction, Request, Response } from "express";
+import { verify } from "jsonwebtoken";
+import { ApiError } from "../utils/api-error";
+
+interface JwtPayload {
+  id: number;
+}
 
 export class JwtMiddleware {
-  verifyToken(secretKey: string) {
+  verifyToken = (secretKey: string) => {
     return (req: Request, res: Response, next: NextFunction) => {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Unauthorized: Token missing" });
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) {
+        throw new ApiError("No Token Provided", 401);
       }
 
-      const token = authHeader.split(" ")[1];
+      verify(token, secretKey, (err, payload) => {
+        if (err) {
+          throw new ApiError("Invalid token or token expired", 401);
+        }
 
-      try {
-        const decoded = jwt.verify(token, secretKey) as JwtPayload & {
-          id: number;
-        };
-        req.user = decoded;
+        res.locals.user = payload as JwtPayload;
         next();
-      } catch (err) {
-        return res.status(401).json({ message: "Unauthorized: Invalid token" });
-      }
+      });
     };
-  }
+  };
 }

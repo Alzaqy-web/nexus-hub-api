@@ -2,7 +2,7 @@
 
 import { CreateTransactionDTO } from "./dto/create-transaction.dto";
 import { PrismaService } from "../prisma/prisma.service";
-import { ApiError } from "../../utils/api.error";
+import { ApiError } from "../../utils/api-error";
 import { TransactionStatus } from "../../generated/prisma/client";
 
 export class TransactionService {
@@ -16,7 +16,7 @@ export class TransactionService {
     const transactions = await this.prisma.transaction.findMany({
       where: { userId },
       include: {
-        event: {
+        events: {
           select: {
             title: true,
             slug: true,
@@ -25,7 +25,7 @@ export class TransactionService {
             endDate: true,
           },
         },
-        Payment: true,
+        payments: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -37,7 +37,7 @@ export class TransactionService {
     const transaction = await this.prisma.transaction.findFirst({
       where: { id, userId },
       include: {
-        event: {
+        events: {
           select: {
             title: true,
             slug: true,
@@ -46,7 +46,7 @@ export class TransactionService {
             endDate: true,
           },
         },
-        Payment: true,
+        payments: true,
       },
     });
 

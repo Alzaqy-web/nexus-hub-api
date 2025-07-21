@@ -39,8 +39,35 @@ model User {
   events           Event[]
   transactions     Transaction[]
   tickets          Ticket[]
+  Review           Review[]
 
   @@map("users")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int // 1 - 5
+  comment   String
+  userId    Int
+  eventId   Int
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model Organizer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  events    Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  eventId   Int
+
+  @@map("organizers")
 }
 
 model Ticket {
@@ -48,6 +75,7 @@ model Ticket {
   name           String
   type           String
   price          Int
+  // isFree         Boolean
   availableSeats Int
   deletedAt      DateTime?
   updatedAt      DateTime  @updatedAt
@@ -61,23 +89,26 @@ model Ticket {
 }
 
 model Event {
-  id          Int           @id @default(autoincrement())
-  slug        String        @unique
-  title       String        @unique
-  description String        @db.Text
-  thumbnail   String
-  content     String        @db.Text
-  category    String
-  location    String
-  startDate   DateTime
-  endDate     DateTime
-  userId      Int
-  user        User          @relation(fields: [userId], references: [id])
-  tickets     Ticket[]
-  deletedAt   DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Transaction Transaction[]
+  id           Int           @id @default(autoincrement())
+  slug         String        @unique
+  title        String        @unique
+  description  String        @db.Text
+  thumbnail    String
+  content      String        @db.Text
+  category     String
+  location     String
+  startDate    DateTime
+  endDate      DateTime
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  tickets      Ticket[]
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  Promotion    Promotion[]
+  Organizer    Organizer[]
+  Review       Review[]
 
   @@map("events")
 }
@@ -120,6 +151,20 @@ model Payment {
   transactions  Transaction @relation(fields: [transactionId], references: [id])
 
   @@map("payments")
+}
+
+model Promotion {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id])
+  code      String   @unique
+  discount  Float // contoh: 0.1 untuk 10%
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("promotions")
 }
 
 model PointHistory {

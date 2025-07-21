@@ -25,8 +25,6 @@ export class AuthController {
       next(error);
     }
   };
-<<<<<<< HEAD
-=======
 
   registerAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -36,5 +34,4 @@ export class AuthController {
       next(error);
     }
   };
->>>>>>> main
 }

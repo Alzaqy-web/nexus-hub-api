@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { TransactionController } from "./transaction.controller";
-import { JwtMiddleware } from "../../middlewares/jwt.middleware";
+
 import { JWT_SECRET } from "../../config/env";
+import { JwtMiddleware } from "../../middleware/jwt.middleware";
 
 export class TransactionRouter {
   private router: Router;
