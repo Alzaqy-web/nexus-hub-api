@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { EventController } from "./event.controller";
-import { UploaderMiddleware } from "../../middlewares/uploader.middleware";
-import { JwtMiddleware } from "../../middlewares/jwt.middleware";
+
 import { JWT_SECRET } from "../../config/env";
-import { validateBody } from "../../middlewares/validation.middleware";
+
 import { CreateEventDTO } from "./dto/create-event.dto";
+import { JwtMiddleware } from "../../middleware/jwt.middleware";
+import { UploaderMiddleware } from "../../middleware/uploader.middleware";
+import { validateBody } from "../../middleware/validation.middleware";
 
 export class EventRouter {
   private router: Router;
@@ -25,9 +27,9 @@ export class EventRouter {
     this.router.get("/:slug", this.eventController.getEventBySlug);
     this.router.post(
       "/",
-      // this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
       this.uploaderMiddleware
-        .upload()
+        .getUploader()
         .fields([{ name: "thumbnail", maxCount: 1 }]),
       this.uploaderMiddleware.fileFilter([
         "image/jpeg",
@@ -37,11 +39,11 @@ export class EventRouter {
       validateBody(CreateEventDTO),
       this.eventController.createEvents
     );
-    this.router.delete(
-      "/:id",
-      this.jwtMiddleware.verifyToken(JWT_SECRET!),
-      this.eventController.deleteEvent
-    );
+    // this.router.delete(
+    //   "/:id",
+    //   this.jwtMiddleware.verifyToken(JWT_SECRET!),
+    //   this.eventController.deleteEvent
+    // );
   };
 
   getRouter = () => {

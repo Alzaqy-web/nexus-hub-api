@@ -1,18 +1,18 @@
 import { Prisma } from "../../generated/prisma";
-import { ApiError } from "../../utils/api.error";
+import { ApiError } from "../../utils/api-error";
 import { generateSlug } from "../../utils/generate-slug";
-import { CloudinariService } from "../cloudinary/cloudinary.service";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateEventDTO } from "./dto/create-event.dto";
 import { GetEventDTO } from "./dto/get-event.dto";
 
 export class EventService {
   prisma: PrismaService;
-  private cloudinaryService: CloudinariService;
+  private cloudinaryService: CloudinaryService;
 
   constructor() {
     this.prisma = new PrismaService();
-    this.cloudinaryService = new CloudinariService();
+    this.cloudinaryService = new CloudinaryService();
   }
 
   getEvents = async (query: GetEventDTO) => {
@@ -87,8 +87,8 @@ export class EventService {
 
   createEvent = async (
     body: CreateEventDTO,
-    thumbnail: Express.Multer.File
-    // authUserId: number
+    thumbnail: Express.Multer.File,
+    authUserId: number
   ) => {
     // cek title sudah ada atau belum
     const event = await this.prisma.event.findFirst({
@@ -106,9 +106,7 @@ export class EventService {
       data: {
         ...body,
         thumbnail: secure_url,
-        // userId: authUserId,
-        userId: 1,
-
+        userId: authUserId,
         slug,
       },
     });
@@ -116,27 +114,27 @@ export class EventService {
     return { message: "create Event success" };
   };
 
-  deteleEvent = async (id: number, authUserId: number) => {
-    const event = await this.prisma.event.findFirst({
-      // cari
-      where: { id, deletedAt: null },
-    });
-    // jika tidak ada
-    if (!event) {
-      throw new ApiError("event not found", 404);
-    }
+  // deteleEvent = async (id: number, authUserId: number) => {
+  //   const event = await this.prisma.event.findFirst({
+  //     // cari
+  //     where: { id, deletedAt: null },
+  //   });
+  //   // jika tidak ada
+  //   if (!event) {
+  //     throw new ApiError("event not found", 404);
+  //   }
 
-    if (event.userId !== authUserId) {
-      throw new ApiError("unauthorized", 401);
-    }
+  //   if (event.userId !== authUserId) {
+  //     throw new ApiError("unauthorized", 401);
+  //   }
 
-    await this.cloudinaryService.remove(event.thumbnail);
+  //   await this.cloudinaryService.remove(event.thumbnail);
 
-    await this.prisma.event.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
+  //   await this.prisma.event.update({
+  //     where: { id },
+  //     data: { deletedAt: new Date() },
+  //   });
 
-    return { message: "delelte event sucssec" };
-  };
+  //   return { message: "delelte event sucssec" };
+  // };
 }

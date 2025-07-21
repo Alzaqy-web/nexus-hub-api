@@ -7,9 +7,9 @@ import { SampleRouter } from "./modules/sample/sample.router";
 import { EventRouter } from "./modules/event/event.router";
 import { TicketRouter } from "./modules/ticket/ticket.router";
 import { TransactionRouter } from "./modules/transaction/transaction.router";
-
-import { ProfileRouter } from "./modules/profile/profile.router";
+// import { ProfileRouter } from "./modules/profile/profile.router";
 import { errorMiddleware } from "./middleware/error.middlware";
+import { PaymentRouter } from "./modules/payment/payment.router";
 
 export class App {
   app: Express;
@@ -29,16 +29,19 @@ export class App {
   private routes() {
     const sampleRouter = new SampleRouter();
     const authRouter = new AuthRouter();
+    // const profileRouter = new ProfileRouter();
     const eventRouter = new EventRouter();
     const ticketRouter = new TicketRouter();
     const transactionRouter = new TransactionRouter();
+    const paymentRouter = new PaymentRouter();
 
     this.app.use("/samples", sampleRouter.getRouter());
     this.app.use("/auth", authRouter.getRouter());
+    // this.app.use("/profile", profileRouter.getRouter());
     this.app.use("/events", eventRouter.getRouter());
     this.app.use("/tickets", ticketRouter.getRouter());
     this.app.use("/transactions", transactionRouter.getRouter());
-    this.app.use("/profile", ProfileRouter.getRouter());
+    this.app.use("/payments", paymentRouter.getRouter());
   }
 
   private handleError() {

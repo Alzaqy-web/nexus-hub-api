@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { NextFunction, Request, Response } from "express";
-import { ApiError } from "../../utils/api.error";
+import { ApiError } from "../../utils/api-error";
 import { GetEventDTO } from "./dto/get-event.dto";
 import { EventService } from "./event.service";
 import { CreateEventDTO } from "./dto/create-event.dto";
@@ -40,27 +40,28 @@ export class EventController {
 
       if (!thumbnail) throw new ApiError("thumbnail is required", 400);
 
-      const userId: number = res.locals.user?.id || 1; // 1 & ?_-> test tampa login
+      const userId: number = res.locals.user?.id;
 
       const result = await this.eventService.createEvent(
         req.body,
-        thumbnail
-        // userId
+        thumbnail,
+        userId
       );
       res.status(201).send(result);
     } catch (error) {
       next(error);
+      return;
     }
   };
 
-  deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const id = Number(req.params.id);
-      const authUserId = Number(res.locals.user.id);
-      const result = await this.eventService.deteleEvent(id, authUserId);
-      res.status(200).send(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  // deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
+  //   try {
+  //     const id = Number(req.params.id);
+  //     const authUserId = Number(res.locals.user.id);
+  //     const result = await this.eventService.deteleEvent(id, authUserId);
+  //     res.status(200).send(result);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 }

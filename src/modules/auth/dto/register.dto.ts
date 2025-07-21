@@ -5,7 +5,6 @@ import {
   IsStrongPassword,
   IsOptional,
   IsIn,
-  isString,
 } from "class-validator";
 
 export class RegisterDTO {

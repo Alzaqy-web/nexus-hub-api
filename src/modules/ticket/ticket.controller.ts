@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { TicketService } from "./ticket.service";
-import { ApiError } from "../../utils/api.error";
+import { ApiError } from "../../utils/api-error";
 
 export class TicketController {
   ticketService: TicketService;
