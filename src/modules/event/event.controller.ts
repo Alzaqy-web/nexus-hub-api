@@ -41,19 +41,26 @@ export class EventController {
 
       if (!thumbnail) throw new ApiError("thumbnail is required", 400);
 
+<
       const user = res.locals.user;
 
       if (!user) throw new ApiError("Unauthorized", 401);
 
+
+
       const result = await this.eventService.createEvent(
         req.body,
         thumbnail,
+
         user.id,
         user.role
+
+
       );
       res.status(201).send(result);
     } catch (error) {
       next(error);
+      return;
     }
   };
 

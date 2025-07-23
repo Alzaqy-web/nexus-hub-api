@@ -11,6 +11,7 @@ export class PaymentService {
     this.prisma = new PrismaService();
   }
 
+
   getPayments = async (userId: number) => {
     try {
       const payments = await this.prisma.payment.findMany({
@@ -56,6 +57,7 @@ export class PaymentService {
   };
 
   // Buat payment baru
+
   createPayment = async (dto: CreatePaymentDTO, userId: number) => {
     // Cek transaksi valid & milik user yang sesuai
     const transaction = await this.prisma.transaction.findFirst({

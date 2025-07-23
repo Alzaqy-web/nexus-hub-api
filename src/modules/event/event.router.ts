@@ -28,7 +28,6 @@ export class EventRouter {
     this.router.post(
       "/",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
-
       this.uploaderMiddleware
         .getUploader()
         .fields([{ name: "thumbnail", maxCount: 1 }]),

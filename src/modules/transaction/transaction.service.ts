@@ -1,3 +1,4 @@
+
 import { TransactionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
@@ -18,6 +19,7 @@ export class TransactionService {
       where: { userId },
       include: {
         events: {
+
           // pastikan ini sesuai nama relasi di Prisma schema kamu (event, bukan events)
           select: {
             title: true,
@@ -46,6 +48,8 @@ export class TransactionService {
             role: true,
           },
         },
+
+
       },
       orderBy: { createdAt: "desc" },
     });

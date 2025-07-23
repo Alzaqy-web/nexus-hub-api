@@ -71,6 +71,7 @@ model Organizer {
 }
 
 model Ticket {
+
   id                 Int                 @id @default(autoincrement())
   name               String
   type               String
@@ -85,6 +86,7 @@ model Ticket {
   eventId            Int
   event              Event               @relation(fields: [eventId], references: [id])
   transactionTickets TransactionTicket[]
+
 
   @@map("tickets")
 }

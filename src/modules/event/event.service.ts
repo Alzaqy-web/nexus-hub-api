@@ -61,6 +61,7 @@ export class EventService {
     thumbnail: Express.Multer.File,
     authUserId: number,
     authUserRole: string // tambahkan parameter role
+
   ) => {
     // Cek role dulu
     if (authUserRole !== "EO") {

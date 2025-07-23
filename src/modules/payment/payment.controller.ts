@@ -16,8 +16,10 @@ export class PaymentController {
 
   getPayments = async (req: Request, res: Response, next: NextFunction) => {
     try {
+
       const userId = res.locals.user.id;
       const payments = await this.paymentService.getPayments(userId);
+
 
       if (!payments) {
         throw new Error("Failed to fetch payments");
@@ -45,6 +47,7 @@ export class PaymentController {
     try {
       const dto = plainToInstance(CreatePaymentDTO, req.body);
       await validateOrReject(dto);
+
 
       const userId = res.locals.user.id;
       console.log("User ID from token:", res.locals.user.id);

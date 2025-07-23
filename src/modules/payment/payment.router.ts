@@ -2,6 +2,7 @@
 
 import { Router } from "express";
 import { PaymentController } from "./payment.controller";
+
 import { JWT_SECRET } from "../../config/env";
 import { JwtMiddleware } from "../../middleware/jwt.middleware";
 
@@ -19,6 +20,7 @@ export class PaymentRouter {
 
   private initRoutes() {
     // Buat pembayaran baru
+
     this.router.get(
       "/",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
@@ -35,6 +37,8 @@ export class PaymentRouter {
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
       this.paymentController.createPayment
     );
+
+
   }
 
   getRouter() {

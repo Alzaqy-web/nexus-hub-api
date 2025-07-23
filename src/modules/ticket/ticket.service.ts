@@ -52,6 +52,7 @@ export class TicketService {
   //   }
   // };
 
+
   // deleteTicket = async (id: number, authUserId: number) => {
   //   const ticket = await this.prisma.ticket.findFirst({
   //     where: { id, deletedAt: null },
