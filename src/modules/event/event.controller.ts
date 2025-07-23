@@ -33,6 +33,7 @@ export class EventController {
     }
   };
 
+  // // Create
   createEvents = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -40,17 +41,19 @@ export class EventController {
 
       if (!thumbnail) throw new ApiError("thumbnail is required", 400);
 
-      const userId: number = res.locals.user?.id;
+      const user = res.locals.user;
+
+      if (!user) throw new ApiError("Unauthorized", 401);
 
       const result = await this.eventService.createEvent(
         req.body,
         thumbnail,
-        userId
+        user.id,
+        user.role
       );
       res.status(201).send(result);
     } catch (error) {
       next(error);
-      return;
     }
   };
 

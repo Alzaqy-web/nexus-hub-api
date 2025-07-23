@@ -35,16 +35,16 @@ export class TicketController {
     }
   };
 
-  createTicket = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const authUserId = res.locals.user.id;
-      const ticket = await this.ticketService.createTicket(
-        req.body,
-        authUserId
-      );
-      res.status(201).json(ticket);
-    } catch (error) {
-      next(error);
-    }
-  };
+  // createTicket = async (req: Request, res: Response, next: NextFunction) => {
+  //   try {
+  //     const authUserId = res.locals.user.id;
+  //     const ticket = await this.ticketService.createTicket(
+  //       req.body,
+  //       authUserId
+  //     );
+  //     res.status(201).json(ticket);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 }

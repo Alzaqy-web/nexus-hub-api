@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { verify } from "jsonwebtoken";
 import { ApiError } from "../utils/api-error";
+import { User } from "../generated/prisma";
 
 interface JwtPayload {
   id: number;

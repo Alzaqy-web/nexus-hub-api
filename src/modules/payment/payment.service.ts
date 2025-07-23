@@ -11,9 +11,14 @@ export class PaymentService {
     this.prisma = new PrismaService();
   }
 
-  getPaymens = async () => {
+  getPayments = async (userId: number) => {
     try {
       const payments = await this.prisma.payment.findMany({
+        where: {
+          transactions: {
+            userId: userId, // filter hanya transaksi milik user ini
+          },
+        },
         include: {
           transactions: {
             include: {
@@ -30,6 +35,7 @@ export class PaymentService {
           },
         },
       });
+
       return payments;
     } catch (error) {
       throw new ApiError("Failed to fetch payments", 500);
@@ -50,17 +56,37 @@ export class PaymentService {
   };
 
   // Buat payment baru
-  createPayment = async (dto: CreatePaymentDTO) => {
-    // Cek transaksi valid & status masih PENDING
-    const transaction = await this.prisma.transaction.findUnique({
-      where: { id: dto.transactionId },
+  createPayment = async (dto: CreatePaymentDTO, userId: number) => {
+    // Cek transaksi valid & milik user yang sesuai
+    const transaction = await this.prisma.transaction.findFirst({
+      where: {
+        id: dto.transactionId,
+        userId: userId, // validasi user yang punya transaksi ini
+      },
     });
 
     if (!transaction) throw new ApiError("Transaction not found", 404);
+
     if (transaction.status !== TransactionStatus.PENDING) {
       throw new ApiError("Transaction is not pending payment", 400);
     }
-    // Create payment
+    console.log("Transaction ID from request:", dto.transactionId);
+
+    const existingPayment = await this.prisma.payment.findUnique({
+      where: { transactionId: dto.transactionId },
+    });
+
+    if (existingPayment) {
+      throw new ApiError("Payment for this transaction already exists", 400);
+    }
+
+    if (dto.amountPaid < transaction.totalPrice) {
+      throw new ApiError(
+        "Amount paid is less than transaction total price",
+        400
+      );
+    }
+
     const payment = await this.prisma.payment.create({
       data: {
         transactionId: dto.transactionId,
@@ -91,10 +117,6 @@ export class PaymentService {
       where: { id: dto.transactionId },
       data: { status: TransactionStatus.PAID },
     });
-
-    if (!payment) {
-      throw new ApiError("Failed to create payment", 500);
-    }
 
     return payment;
   };

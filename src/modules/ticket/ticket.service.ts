@@ -23,7 +23,7 @@ export class TicketService {
 
   // GET single ticket by ID
   getTicketById = async (id: number) => {
-    const ticket = await this.prisma.ticket.findUnique({
+    const ticket = await this.prisma.ticket.findFirst({
       where: { id },
       include: { event: true },
     });
@@ -35,22 +35,22 @@ export class TicketService {
     return ticket;
   };
 
-  createTicket = async (data: CreateTicketDTO, authUserId: number) => {
-    try {
-      const ticket = await this.prisma.ticket.create({
-        data: {
-          ...data,
-          userId: authUserId,
-        },
-      });
-      return {
-        message: "Ticket created successfully",
-        ticket,
-      };
-    } catch (error) {
-      throw new ApiError("Failed to create ticket", 500);
-    }
-  };
+  // createTicket = async (data: CreateTicketDTO, authUserId: number) => {
+  //   try {
+  //     const ticket = await this.prisma.ticket.create({
+  //       data: {
+  //         ...data,
+  //         userId: authUserId,
+  //       },
+  //     });
+  //     return {
+  //       message: "Ticket created successfully",
+  //       ticket,
+  //     };
+  //   } catch (error) {
+  //     throw new ApiError("Failed to create ticket", 500);
+  //   }
+  // };
 
   // deleteTicket = async (id: number, authUserId: number) => {
   //   const ticket = await this.prisma.ticket.findFirst({
