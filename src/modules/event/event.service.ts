@@ -55,62 +55,54 @@ export class EventService {
     return event;
   };
 
-  // createEvent = async (
-  //   body: CreateEventDTO,
-  //   thumbnail: Express.Multer.File,
-  //   authUserId: number
-  // ) => {
-  //   // cek
-  //   const Event = await this.prisma.event.findFirst({
-  //     where: { title: body.title },
-  //   });
-
-  //   if (Event) {
-  //     throw new ApiError("title already in use", 400);
-  //   }
-
-  //   const slug = generateSlug(body.title);
-
-  //   const { secure_url } = await this.cloudinaryService.upload(thumbnail);
-
-  //   await this.prisma.event.create({
-  //     data: {
-  //       ...body,
-  //       thumbnail: secure_url,
-  //       userId: authUserId,
-  //       slug,
-  //     },
-  //   });
-
-  //   return { message: "create Event susscess" };
-  // };
-
+  // test
   createEvent = async (
     body: CreateEventDTO,
     thumbnail: Express.Multer.File,
-    authUserId: number
+    authUserId: number,
+    authUserRole: string // tambahkan parameter role
+
   ) => {
+    // Cek role dulu
+    if (authUserRole !== "EO") {
+      throw new ApiError("Only EO role can create events", 403);
+    }
     // cek title sudah ada atau belum
     const event = await this.prisma.event.findFirst({
       where: { title: body.title },
     });
-
     if (event) {
       throw new ApiError("title already in use", 400);
     }
 
     const slug = generateSlug(body.title);
     const { secure_url } = await this.cloudinaryService.upload(thumbnail);
-
-    await this.prisma.event.create({
+    // join 2 table
+    const newEvent = await this.prisma.event.create({
       data: {
-        ...body,
+        content: body.content,
+        category: body.category,
+        location: body.location,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        description: body.description,
+        title: body.title,
         thumbnail: secure_url,
         userId: authUserId,
         slug,
       },
     });
 
+    await this.prisma.ticket.create({
+      data: {
+        eventId: newEvent.id,
+        price: Number(body.price),
+        name: body.name,
+        availableSeats: Number(body.availableSeats),
+        type: body.type,
+        userId: authUserId,
+      },
+    });
     return { message: "create Event success" };
   };
 

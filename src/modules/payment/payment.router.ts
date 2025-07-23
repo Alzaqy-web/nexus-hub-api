@@ -20,7 +20,12 @@ export class PaymentRouter {
 
   private initRoutes() {
     // Buat pembayaran baru
-    this.router.get("/", this.paymentController.getPayments);
+
+    this.router.get(
+      "/",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.paymentController.getPayments
+    );
     this.router.get(
       "/:id",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
@@ -33,7 +38,7 @@ export class PaymentRouter {
       this.paymentController.createPayment
     );
 
-    // Ambil pembayaran berdasarkan transactionId
+
   }
 
   getRouter() {
