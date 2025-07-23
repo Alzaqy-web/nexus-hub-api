@@ -28,6 +28,11 @@ export class TransactionRouter {
       this.transactionController.getUserTransactions
     );
     this.router.get(
+      "/admin",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.transactionController.getAdminTransactions
+    );
+    this.router.get(
       "/:id",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
       this.transactionController.getTransactionById

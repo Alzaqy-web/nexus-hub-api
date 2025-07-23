@@ -3,6 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { CreateTransactionDTO } from "./dto/create-transaction.dto";
 import { TransactionService } from "./transaction.service";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto";
 
 export class TransactionController {
   transactionService: TransactionService;
@@ -58,6 +59,24 @@ export class TransactionController {
         userId
       );
       res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getAdminTransactions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const authUserId = res.locals.user.id;
+      const query = plainToInstance(PaginationQueryParams, req.query);
+      const result = await this.transactionService.getAdminTransactions(
+        query,
+        authUserId
+      );
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }

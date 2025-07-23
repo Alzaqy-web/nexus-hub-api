@@ -23,8 +23,19 @@ export class EventRouter {
   }
 
   private initialRoutes = () => {
-    this.router.get("/", this.eventController.getEvents);
+    this.router.get(
+      "/",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.eventController.getEvents
+    );
+    this.router.get(
+      "/admin",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.eventController.getAdminEvents
+    );
+
     this.router.get("/:slug", this.eventController.getEventBySlug);
+
     this.router.post(
       "/",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
