@@ -1,58 +1,37 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ProfileService } from "./profile.service";
-import { CloudinaryService } from "../cloudinary/cloudinary.service";
-import { PrismaClient } from "../../generated/prisma";
-import { PasswordService } from "../auth/password.service";
 
-const prisma = new PrismaClient();
-const profileService = new ProfileService(
-  prisma,
-  new CloudinaryService(),
-  new PasswordService()
-);
+export class ProfileController {
+  private profileService: ProfileService;
 
-const profileController = {
-  upload: async (req: Request, res: Response) => {
+  constructor(ProfileService: ProfileService) {
+    this.profileService = ProfileService;
+  }
+  getProfileById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const file = req.file;
-
-      const userId = req.user?.id; // ✅ ambil dari token
-
-      console.log(file?.originalname, file?.mimetype, file?.size);
-
-      if (!file || !userId) {
-        return res.status(400).json({ message: "File or userId missing" });
-      }
-
-      const imageUrl = await profileService.uploadProfilePicture(file, userId);
-
-      return res.status(200).json({ imageUrl });
+      const id = Number(req.params.id);
+      const result = await this.profileService.getProfileById(id);
+      res.status(200).send(result);
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Upload failed", error });
+      next(error);
     }
-  },
+  };
 
-  update: async (req: Request, res: Response) => {
+  updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = req.user?.id;
-      const { name, email, password } = req.body;
-
-      if (!userId) {
-        return res.status(400).json({ message: "Unauthorized" });
-      }
-
-      if (!name && !email && !password) {
-        return res.status(400).json({ message: "No data to update" });
-      }
-
-      await profileService.updateProfile(userId, { name, email, password });
-
-      return res.status(200).json({ message: "Profile updated successfully" });
+      console.log("DEBUG UPDATE PROFILE >>>");
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const profilePic = files?.profilePic?.[0];
+      const result = await this.profileService.updateProfile(
+        Number(req.params.id),
+        req.body,
+        res.locals.user.id,
+        profilePic
+      );
+      res.status(200).send(result);
     } catch (error) {
-      return res.status(500).json({ message: "Update failed", error });
+      console.log("ERROR UPDATE:", error);
+      next(error);
     }
-  },
-};
-
-export default profileController;
+  };
+}

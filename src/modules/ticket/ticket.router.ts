@@ -23,12 +23,12 @@ export class TicketRouter {
     // Public route untuk ambil semua tiket
     this.router.get("/", this.ticketController.getTickets);
     this.router.get("/:id", this.ticketController.getTicketById);
-    this.router.post(
-      "/",
-      this.jwtMiddleware.verifyToken(JWT_SECRET!),
-      validateBody(CreateTicketDTO),
-      this.ticketController.createTicket
-    );
+    // this.router.post(
+    //   "/",
+    //   this.jwtMiddleware.verifyToken(JWT_SECRET!),
+    //   validateBody(CreateTicketDTO),
+    //   this.ticketController.createTicket
+    // );
   };
 
   getRouter = () => this.router;

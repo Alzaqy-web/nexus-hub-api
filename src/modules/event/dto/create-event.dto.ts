@@ -1,13 +1,12 @@
+import { Transform, Type } from "class-transformer";
 import {
-  ArrayNotEmpty,
-  IsArray,
   IsDate,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsString,
-  ValidateNested,
+  Min,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { PaginationQueryParams } from "../../../pagination/dto/pagination.dto";
 
 export class CreateEventDTO extends PaginationQueryParams {
@@ -40,4 +39,24 @@ export class CreateEventDTO extends PaginationQueryParams {
   @IsDate()
   @Type(() => Date)
   endDate!: Date;
+
+  @IsNotEmpty()
+  @IsString()
+  name!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  type!: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(0)
+  @Transform(({ value }) => parseInt(value))
+  price!: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  @Transform(({ value }) => parseInt(value))
+  availableSeats!: number;
 }

@@ -23,7 +23,7 @@ export class TicketService {
 
   // GET single ticket by ID
   getTicketById = async (id: number) => {
-    const ticket = await this.prisma.ticket.findUnique({
+    const ticket = await this.prisma.ticket.findFirst({
       where: { id },
       include: { event: true },
     });
@@ -34,46 +34,4 @@ export class TicketService {
 
     return ticket;
   };
-
-  createTicket = async (data: CreateTicketDTO, authUserId: number) => {
-    try {
-      const ticket = await this.prisma.ticket.create({
-        data: {
-          ...data,
-          userId: authUserId,
-        },
-      });
-      return {
-        message: "Ticket created successfully",
-        ticket,
-      };
-    } catch (error) {
-      throw new ApiError("Failed to create ticket", 500);
-    }
-  };
-
-  // deleteTicket = async (id: number, authUserId: number) => {
-  //   const ticket = await this.prisma.ticket.findFirst({
-  //     where: { id, deletedAt: null },
-  //   });
-
-  //   if (!ticket) {
-  //     throw new ApiError("Ticket not found", 404);
-  //   }
-
-  //   if (ticket.userId !== authUserId) {
-  //     throw new ApiError("Unauthorized", 401);
-  //   }
-
-  //   // Hapus dari cloudinary (jika ada file terkait)
-  //   await this.cloudinaryService.remove(ticket.id.toString());
-
-  //   // Soft delete ticket
-  //   await this.prisma.ticket.update({
-  //     where: { id },
-  //     data: { deletedAt: new Date() },
-  //   });
-
-  //   return { message: "Delete ticket success" };
-  // };
 }

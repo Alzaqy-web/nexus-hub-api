@@ -13,9 +13,8 @@ export class EventController {
 
   getEvents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authUserId = res.locals.user.id;
       const query = plainToInstance(PaginationQueryParams, req.query);
-      const result = await this.eventService.getEvents(query, authUserId);
+      const result = await this.eventService.getEvents(query);
       res.status(200).send(result);
     } catch (error) {
       next(error);
@@ -43,6 +42,7 @@ export class EventController {
     }
   };
 
+  // // Create
   createEvents = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -50,17 +50,35 @@ export class EventController {
 
       if (!thumbnail) throw new ApiError("thumbnail is required", 400);
 
-      const userId: number = res.locals.user?.id;
+      const user = res.locals.user;
+
+      if (!user) throw new ApiError("Unauthorized", 401);
 
       const result = await this.eventService.createEvent(
         req.body,
         thumbnail,
-        userId
+        user.id,
+        user.role
       );
       res.status(201).send(result);
     } catch (error) {
       next(error);
       return;
+    }
+  };
+
+  updateEvent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const result = await this.eventService.updateEvent(
+        req.params.slug,
+        req.body,
+        res.locals.user.id
+      );
+
+      res.status(200).send(result);
+    } catch (error) {
+      next(error);
     }
   };
 }

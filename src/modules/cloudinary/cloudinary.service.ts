@@ -39,5 +39,15 @@ export class CloudinaryService {
     });
   };
 
-  remove = () => {};
+  private extractPublicIdFormUrl = (url: string) => {
+    const urlParts = url.split("/");
+    const publicIdWithExtension = urlParts[urlParts.length - 1];
+    const publicId = publicIdWithExtension.split(".")[0];
+    return publicId;
+  };
+
+  remove = async (secureUrl: string) => {
+    const publicId = this.extractPublicIdFormUrl(secureUrl);
+    return await cloudinary.uploader.destroy(publicId);
+  };
 }
