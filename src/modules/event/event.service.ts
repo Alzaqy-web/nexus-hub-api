@@ -2,9 +2,10 @@ import { Prisma } from "../../generated/prisma";
 import { ApiError } from "../../utils/api-error";
 import { generateSlug } from "../../utils/generate-slug";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateEventDTO } from "./dto/create-event.dto";
-import { GetEventDTO } from "./dto/get-event.dto";
+import { UpdateEventDTO } from "./dto/update-event.dto";
 
 export class EventService {
   prisma: PrismaService;
@@ -15,23 +16,41 @@ export class EventService {
     this.cloudinaryService = new CloudinaryService();
   }
 
-  getEvents = async (query: GetEventDTO) => {
-    const { page, take, sortBy, sortOrder, search } = query;
+  getEvents = async (query: PaginationQueryParams) => {
+    const { page, take, sortBy, sortOrder } = query;
 
     const whereClause: Prisma.EventWhereInput = {
       deletedAt: null,
     };
-
-    if (search) {
-      whereClause.title = { contains: search, mode: "insensitive" };
-    }
 
     const events = await this.prisma.event.findMany({
       where: whereClause,
       orderBy: { [sortBy]: sortOrder },
       skip: (page - 1) * take,
       take: take,
-      include: { user: { omit: { password: true } }, tickets: true },
+      include: { tickets: true },
+    });
+
+    const count = await this.prisma.event.count({ where: whereClause });
+
+    return {
+      data: events,
+      meta: { page, take, total: count },
+    };
+  };
+
+  getAdminEvents = async (query: PaginationQueryParams, authUserId: number) => {
+    const { page, take, sortBy, sortOrder } = query;
+
+    const whereClause: Prisma.EventWhereInput = {
+      userId: authUserId,
+    };
+
+    const events = await this.prisma.event.findMany({
+      where: whereClause,
+      orderBy: { [sortBy]: sortOrder },
+      skip: (page - 1) * take,
+      take: take,
     });
 
     const count = await this.prisma.event.count({ where: whereClause });
@@ -45,7 +64,7 @@ export class EventService {
   getEventBySlug = async (slug: string) => {
     const event = await this.prisma.event.findFirst({
       where: { slug, deletedAt: null },
-      include: { user: { omit: { password: true } }, tickets: true }, //-> inculde -> join
+      include: { user: { omit: { password: true } } },
     });
 
     if (!event) {
@@ -55,13 +74,11 @@ export class EventService {
     return event;
   };
 
-  // test
   createEvent = async (
     body: CreateEventDTO,
     thumbnail: Express.Multer.File,
     authUserId: number,
     authUserRole: string // tambahkan parameter role
-
   ) => {
     // Cek role dulu
     if (authUserRole !== "EO") {
@@ -106,27 +123,58 @@ export class EventService {
     return { message: "create Event success" };
   };
 
-  // deteleEvent = async (id: number, authUserId: number) => {
-  //   const event = await this.prisma.event.findFirst({
-  //     // cari
-  //     where: { id, deletedAt: null },
-  //   });
-  //   // jika tidak ada
-  //   if (!event) {
-  //     throw new ApiError("event not found", 404);
-  //   }
+  updateEvent = async (
+    slug: string,
+    body: UpdateEventDTO,
+    authUserId: number,
+    thumbnail?: Express.Multer.File
+  ) => {
+    const event = await this.prisma.event.findFirst({
+      where: { slug },
+    });
 
-  //   if (event.userId !== authUserId) {
-  //     throw new ApiError("unauthorized", 401);
-  //   }
+    if (!event) {
+      throw new ApiError("event not found", 404);
+    }
 
-  //   await this.cloudinaryService.remove(event.thumbnail);
+    if (event.userId !== authUserId) {
+      throw new ApiError("You are not allowed to update this event", 403);
+    }
 
-  //   await this.prisma.event.update({
-  //     where: { id },
-  //     data: { deletedAt: new Date() },
-  //   });
+    let newSlug = event.slug;
 
-  //   return { message: "delelte event sucssec" };
-  // };
+    if (body.title && body.title !== event.title) {
+      const eventTitle = await this.prisma.event.findFirst({
+        where: { title: body.title, NOT: { id: event.id } },
+      });
+
+      if (eventTitle) {
+        throw new ApiError("title already in use", 400);
+      }
+
+      newSlug = generateSlug(body.title);
+    }
+
+    let newThumbnail = event.thumbnail;
+
+    if (thumbnail) {
+      if (event.thumbnail) {
+        await this.cloudinaryService.remove(event.thumbnail);
+      }
+
+      const { secure_url } = await this.cloudinaryService.upload(thumbnail);
+      newThumbnail = secure_url;
+    }
+
+    return await this.prisma.event.update({
+      where: { slug },
+      data: {
+        ...body,
+        slug: newSlug,
+        thumbnail: newThumbnail,
+        startDate: body.startDate ? new Date(body.startDate) : undefined,
+        endDate: body.endDate ? new Date(body.endDate) : undefined,
+      },
+    });
+  };
 }

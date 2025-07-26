@@ -1,17 +1,20 @@
-
-import { TransactionStatus } from "../../generated/prisma/client";
+import { Prisma, TransactionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTransactionDTO } from "./dto/create-transaction.dto";
+import { MailService } from "../mail/mail.service";
 
 export class TransactionService {
   prisma: PrismaService;
   private cloudinaryService: CloudinaryService;
+  private mailService: MailService;
 
   constructor() {
     this.prisma = new PrismaService();
     this.cloudinaryService = new CloudinaryService();
+    this.mailService = new MailService();
   }
 
   getUserTransactions = async (userId: number) => {
@@ -19,7 +22,6 @@ export class TransactionService {
       where: { userId },
       include: {
         events: {
-
           // pastikan ini sesuai nama relasi di Prisma schema kamu (event, bukan events)
           select: {
             title: true,
@@ -48,8 +50,6 @@ export class TransactionService {
             role: true,
           },
         },
-
-
       },
       orderBy: { createdAt: "desc" },
     });
@@ -94,104 +94,10 @@ export class TransactionService {
       },
     });
 
-    // console.log("🔍 getTransactionById called with:", { id, userId });
-
     if (!transaction) throw new ApiError("Transaction not found", 404);
 
     return transaction;
   };
-
-  // createTransaction = async (dto: CreateTransactionDTO, userId: number) => {
-  //   const event = await this.prisma.event.findFirst({
-  //     where: { id: dto.eventId, deletedAt: null },
-  //     include: { tickets: true },
-  //   });
-
-  //   if (!event) throw new ApiError("Event not found", 404);
-
-  //   // cek seats dan hitung totalPrice sekaligus pakai reduce
-  //   const totalPrice = dto.tickets.reduce((acc, t) => {
-  //     const ticket = event.tickets.find((ticket) => ticket.id === t.ticketId);
-  //     if (!ticket) throw new ApiError(`Ticket ID ${t.ticketId} not found`, 404);
-  //     if (ticket.availableSeats < t.quantity)
-  //       throw new ApiError(
-  //         `Insufficient seats for ticket ID ${t.ticketId}`,
-  //         400
-  //       );
-
-  //     return acc + ticket.price * t.quantity;
-  //   }, 0);
-
-  //   const totalQuantity = dto.tickets.reduce((acc, t) => acc + t.quantity, 0);
-
-  //   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 menit
-
-  //   // Disarankan menggunakan transaksi database untuk pengurangan kursi
-  //   const transaction = await this.prisma.$transaction(
-  //     async (prismaTransaction) => {
-  //       const newTransaction = await prismaTransaction.transaction.create({
-  //         data: {
-  //           userId,
-  //           eventId: dto.eventId,
-  //           quantity: totalQuantity,
-  //           totalPrice,
-  //           status: TransactionStatus.PENDING,
-  //           expiresAt,
-  //           transactionTickets: {
-  //             create: dto.tickets.map((t) => ({
-  //               ticketId: t.ticketId,
-  //               quantity: t.quantity,
-  //               price: event.tickets.find((ticket) => ticket.id === t.ticketId)!
-  //                 .price,
-  //             })),
-  //           },
-  //         },
-  //         include: {
-  //           // Include ini untuk mengembalikan data yang lengkap dari transaksi yang baru dibuat
-  //           transactionTickets: {
-  //             include: {
-  //               ticket: {
-  //                 // Include ticket untuk mendapatkan namanya
-  //                 select: { name: true },
-  //               },
-  //             },
-  //           },
-  //           events: {
-  //             select: {
-  //               title: true,
-  //               slug: true,
-  //               thumbnail: true,
-  //               startDate: true,
-  //               endDate: true,
-  //               location: true,
-  //             },
-  //           },
-  //           payments: true,
-  //           user: {
-  //             select: { id: true, name: true, email: true, role: true },
-  //           }, // Sertakan payments jika diperlukan pada response create
-  //         },
-  //       });
-  //       console.log("new Transaction", newTransaction);
-
-  //       // Kurangi availableSeats untuk setiap tiket yang dibeli
-  //       for (const t of dto.tickets) {
-  //         await prismaTransaction.ticket.update({
-  //           where: { id: t.ticketId },
-  //           data: {
-  //             availableSeats: {
-  //               decrement: t.quantity,
-  //             },
-  //           },
-  //         });
-  //       }
-
-  //       return newTransaction;
-  //     }
-  //   );
-
-  //   return transaction;
-  // };
 
   createTransaction = async (dto: CreateTransactionDTO, userId: number) => {
     // ambil data user
@@ -291,6 +197,84 @@ export class TransactionService {
       // console.log("new Transaction", newTransaction);
       return newTransaction;
     });
+
+    return transaction;
+  };
+
+  getAdminTransactions = async (
+    query: PaginationQueryParams,
+    authUserId: number
+  ) => {
+    const { page, take, sortBy, sortOrder } = query;
+
+    const whereClause: Prisma.TransactionWhereInput = {
+      events: { userId: authUserId },
+    };
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: whereClause,
+      orderBy: { [sortBy]: sortOrder },
+      skip: (page - 1) * take,
+      take: take,
+      include: { events: true, payments: true, user: true },
+    });
+
+    const count = await this.prisma.transaction.count({ where: whereClause });
+
+    return {
+      data: transactions,
+      meta: { page, take, total: count },
+    };
+  };
+
+  approvalTransaction = async (transactionId: number) => {
+    const transaction = await this.prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        status: "ACCEPTED",
+        updatedAt: new Date(),
+      },
+      include: {
+        user: true,
+        events: true,
+      },
+    });
+    await this.mailService.sendEmail(
+      transaction.user.email,
+      "Transaksi Kamu Diterima 🎉",
+      "approval",
+      {
+        name: transaction.user.name,
+        event: transaction.events.title,
+        amount: transaction.totalPrice.toLocaleString("id-ID"),
+      }
+    );
+
+    return transaction;
+  };
+
+  rejectTransaction = async (transactionId: number) => {
+    const transaction = await this.prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        status: "REJECTED",
+        updatedAt: new Date(),
+      },
+      include: {
+        user: true,
+        events: true,
+      },
+    });
+    await this.mailService.sendEmail(
+      transaction.user.email,
+      "Transaksi Kamu Ditolak 😢",
+      "rejection",
+      {
+        name: transaction.user.name,
+        event: transaction.events.title,
+        reason: "Bukti pembayaran tidak valid",
+      }
+    );
 
     return transaction;
   };

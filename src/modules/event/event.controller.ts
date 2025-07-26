@@ -1,10 +1,8 @@
 import { plainToInstance } from "class-transformer";
 import { NextFunction, Request, Response } from "express";
 import { ApiError } from "../../utils/api-error";
-import { GetEventDTO } from "./dto/get-event.dto";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto";
 import { EventService } from "./event.service";
-import { CreateEventDTO } from "./dto/create-event.dto";
-import { validateOrReject } from "class-validator";
 
 export class EventController {
   eventService: EventService;
@@ -15,9 +13,20 @@ export class EventController {
 
   getEvents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = plainToInstance(GetEventDTO, req.query);
+      const query = plainToInstance(PaginationQueryParams, req.query);
       const result = await this.eventService.getEvents(query);
       res.status(200).send(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getAdminEvents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authUserId = res.locals.user.id;
+      const query = plainToInstance(PaginationQueryParams, req.query);
+      const result = await this.eventService.getAdminEvents(query, authUserId);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -41,21 +50,15 @@ export class EventController {
 
       if (!thumbnail) throw new ApiError("thumbnail is required", 400);
 
-<
       const user = res.locals.user;
 
       if (!user) throw new ApiError("Unauthorized", 401);
 
-
-
       const result = await this.eventService.createEvent(
         req.body,
         thumbnail,
-
         user.id,
         user.role
-
-
       );
       res.status(201).send(result);
     } catch (error) {
@@ -64,14 +67,18 @@ export class EventController {
     }
   };
 
-  // deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
-  //   try {
-  //     const id = Number(req.params.id);
-  //     const authUserId = Number(res.locals.user.id);
-  //     const result = await this.eventService.deteleEvent(id, authUserId);
-  //     res.status(200).send(result);
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  updateEvent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const result = await this.eventService.updateEvent(
+        req.params.slug,
+        req.body,
+        res.locals.user.id
+      );
+
+      res.status(200).send(result);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

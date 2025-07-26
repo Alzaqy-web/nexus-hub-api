@@ -19,6 +19,11 @@ export class TransactionRouter {
   private initialRoutes = () => {
     this.router.get("/", this.transactionController.getUserTransactions);
     this.router.get(
+      "/admin",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.transactionController.getAdminTransactions
+    );
+    this.router.get(
       "/:id",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
       this.transactionController.getTransactionById
@@ -27,6 +32,16 @@ export class TransactionRouter {
       "/",
       this.jwtMiddleware.verifyToken(JWT_SECRET!),
       this.transactionController.createTransaction
+    );
+    this.router.patch(
+      "/approve/:id",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.transactionController.approvalTransaction
+    );
+    this.router.patch(
+      "/reject/:id",
+      this.jwtMiddleware.verifyToken(JWT_SECRET!),
+      this.transactionController.rejectTransaction
     );
   };
 

@@ -5,8 +5,4 @@ export class GetEventDTO extends PaginationQueryParams {
   @IsOptional()
   @IsString()
   search?: string;
-
-  constructor() {
-    super();
-  }
 }
